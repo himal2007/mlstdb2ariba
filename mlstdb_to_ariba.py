@@ -180,7 +180,17 @@ def convert(mlstdb_dir, outdir, scheme=None, ariba_bin="ariba", run_prepareref=T
     if header[0].upper() != "ST":
         raise ValueError(f"Unexpected profile header (expected 'ST' first): {header}")
 
-    genes = header[1:]
+    # Filter profile columns to only those with a corresponding .tfa file.
+    # Some schemes include metadata columns (e.g. clonal_complex, species)
+    # that are not sequence loci and have no .tfa file.
+    all_columns = header[1:]
+    genes = [col for col in all_columns if (scheme_dir / f"{col}.tfa").exists()]
+    skipped = [col for col in all_columns if col not in genes]
+    if skipped:
+        log.info(
+            "Skipping %d non-locus profile column(s) (no .tfa file): %s",
+            len(skipped), ", ".join(skipped),
+        )
     log.info("Genes in scheme (%d): %s", len(genes), ", ".join(genes))
 
     # -- prepare output directories ------------------------------------------
