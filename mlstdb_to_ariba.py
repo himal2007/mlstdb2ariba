@@ -177,8 +177,10 @@ def convert(mlstdb_dir, outdir, scheme=None, ariba_bin="ariba", run_prepareref=T
     with open(profile_src) as fh:
         header = fh.readline().rstrip("\n").split("\t")
 
-    if header[0].upper() != "ST":
-        raise ValueError(f"Unexpected profile header (expected 'ST' first): {header}")
+    # First column is always the ST/profile ID (may be named ST, STalt, etc.)
+    st_col = header[0]
+    if not st_col:
+        raise ValueError(f"Profile file appears empty or malformed: {profile_src}")
 
     # Filter profile columns to only those with a corresponding .tfa file.
     # Some schemes include metadata columns (e.g. clonal_complex, species)
